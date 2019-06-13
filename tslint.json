@@ -1,8 +1,12 @@
 {
-  "defaultSeverity": "warning",
+  "defaultSeverity": "error",
+  "extends": [
+      "tslint:recommended"
+  ],
   "linterOptions": {
     "exclude": ["node_modules/**"]
   },
+  "jsRules": {},
   "rules": {
     "object-literal-sort-keys": false,
     "trailing-comma": false,
@@ -15,5 +19,6 @@
     "quotemark": false,
     "max-classes-per-file": false,
     "object-literal-key-quotes": false
-  }
+  },
+  "rulesDirectory": []
 }
