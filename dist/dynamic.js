@@ -14,8 +14,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var builder_1 = require("./builder");
 var builder_2 = require("./builder");
 var hotModule_1 = require("./hotModule");
-var registerDynamicModule = (function () {
-    function registerDynamicModule(name, state, Vuexmodule) {
+var RegisterDynamicModule = (function () {
+    function RegisterDynamicModule(name, state, Vuexmodule) {
         this.mutations = {};
         this.actions = {};
         this.getters = {};
@@ -33,7 +33,7 @@ var registerDynamicModule = (function () {
             }
         });
     }
-    registerDynamicModule.prototype.register = function () {
+    RegisterDynamicModule.prototype.register = function () {
         builder_2.storedModules[this.name] = __assign({ namespaced: true, state: this.initialState }, this.Vuexmodule);
         if (!builder_1.storeBuilder.state[this.name] && !this.registered) {
             builder_1.storeBuilder.registerModule(this.name, __assign({ namespaced: true, state: this.initialState }, this.Vuexmodule));
@@ -47,7 +47,7 @@ var registerDynamicModule = (function () {
                 (this.newState = newState);
         }
     };
-    registerDynamicModule.prototype.unregister = function () {
+    RegisterDynamicModule.prototype.unregister = function () {
         if (!module.hot) {
             builder_1.storeBuilder.unregisterModule(this.name);
             hotModule_1.disableHotReload(this.name);
@@ -58,10 +58,10 @@ var registerDynamicModule = (function () {
             this.registered = false;
         }
     };
-    return registerDynamicModule;
+    return RegisterDynamicModule;
 }());
 function defineDynamicModule(name, state, vuexModule) {
     hotModule_1.enableHotReload(name, state, vuexModule, true);
-    return new registerDynamicModule(name, state, vuexModule);
+    return new RegisterDynamicModule(name, state, vuexModule);
 }
 exports.defineDynamicModule = defineDynamicModule;

@@ -2,7 +2,7 @@ export type IsValidArg<T> = T extends object ? (keyof T extends never ? false : 
 
 export type inferMutations<T> = T extends (state: any, payload: infer P) => void
   ? IsValidArg<P> extends true
-    ? (payload: P) => void
+    ? (payload?: P) => void
     : () => void
   : () => void;
 
@@ -11,7 +11,7 @@ export type inferActions<T extends (context: any, payload?: any) => void> = T ex
   payload: infer P
 ) => any
   ? IsValidArg<P> extends true
-    ? (payload: P) => ReturnType<T>
+    ? (payload?: P) => ReturnType<T>
     : () => ReturnType<T>
   : ReturnType<T>;
 
@@ -22,15 +22,15 @@ export type inferGetters<T extends (state, getters?) => any> = T extends (
   ? R
   : void;
 
-export type MutationsPayload = {
+export interface IMutationsPayload {
   [x: string]: (state: any, payload?: any) => void;
-};
-export type ActionsPayload = {
+}
+export interface IActionsPayload {
   [x: string]: (context: any, payload?: any) => any;
-};
-export type GettersPayload = {
+}
+export interface IGettersPayload {
   [x: string]: (state?: any, getters?: any) => any;
-};
+}
 
 export type ReturnedGetters<T extends any> = { [K in keyof T]: inferGetters<T[K]> };
 export type ReturnedActions<T extends any> = { [K in keyof T]: inferActions<T[K]> };
