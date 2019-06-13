@@ -20,11 +20,15 @@
     "paths": {
       "@/*": ["src/*"]
     },
-
+    "typeRoots":[
+      "node_modules/@types",
+      "src",
+      "tests",
+    ],
     "outDir": "./dist",
-    "types": ["node", "webpack-env"],
+    "types": ["node", "webpack-env", "jest"],
     "lib": ["esnext", "dom", "dom.iterable", "scripthost"]
   },
   "include": ["src"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "!node_modules/@types"]
 }
