@@ -2,6 +2,10 @@
   "name": "vuex-typed-modules",
   "version": "1.0.21",
   "description": "A typescript wrapper for Vuex store with fully typed exposure",
+  "engines": {
+    "node": "~11",
+    "npm": "~6"
+  },
   "keywords": [
     "vuex",
     "vuex ts",
