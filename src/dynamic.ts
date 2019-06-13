@@ -3,7 +3,7 @@ import { storeBuilder, stateBuilder } from "./builder";
 import { storedModules } from "./builder";
 import { enableHotReload, disableHotReload } from "./hotModule";
 
-class registerDynamicModule {
+class RegisterDynamicModule {
   public mutations = {};
   public actions = {};
   public getters = {};
@@ -171,7 +171,7 @@ function defineDynamicModule<
 };
 function defineDynamicModule(name, state, vuexModule) {
   enableHotReload(name, state, vuexModule, true);
-  return new registerDynamicModule(name, state, vuexModule) as any;
+  return new RegisterDynamicModule(name, state, vuexModule) as any;
 }
 
 export { defineDynamicModule };

@@ -1,12 +1,12 @@
-import Vuex, { Store, StoreOptions } from "../../vuex";
-import Vue from "../../vue";
+import Vuex, { Store, StoreOptions } from "vuex";
+import Vue from "vue";
 import {
   ReturnedMutations,
   ReturnedActions,
   ReturnedGetters,
-  MutationsPayload,
-  ActionsPayload,
-  GettersPayload
+  IMutationsPayload,
+  IActionsPayload,
+  IGettersPayload
 } from "./types";
 import { enableHotReload } from "./hotModule";
 import { oc } from "ts-optchain";
@@ -42,10 +42,10 @@ function createModuleTriggers(moduleName: string) {
 function stateBuilder<S>(state: S, name: string) {
   const b = createModuleTriggers(name);
 
-  const registerMutations = <T extends MutationsPayload>(
+  const registerMutations = <T extends IMutationsPayload>(
     mutations: T
   ): ReturnedMutations<T> => {
-    let renderedMutations = {};
+    const renderedMutations = {};
     if (mutations) {
       Object.keys(mutations).map(key => {
         renderedMutations[key] = b.commit(key);
@@ -54,10 +54,10 @@ function stateBuilder<S>(state: S, name: string) {
     return renderedMutations as any;
   };
 
-  const registerActions = <T extends ActionsPayload>(
+  const registerActions = <T extends IActionsPayload>(
     actions: T
   ): ReturnedActions<T> => {
-    let renderedActions = {};
+    const renderedActions = {};
     if (actions) {
       Object.keys(actions).map(key => {
         renderedActions[key] = b.dispatch(key);
@@ -66,10 +66,10 @@ function stateBuilder<S>(state: S, name: string) {
     return renderedActions as any;
   };
 
-  const registerGetters = <T extends GettersPayload>(
+  const registerGetters = <T extends IGettersPayload>(
     getters: T
   ): ReturnedGetters<T> => {
-    let renderedGetters = {};
+    const renderedGetters = {};
     if (getters) {
       Object.keys(getters).map((key: any) => {
         Object.defineProperty(renderedGetters, key, {
@@ -92,9 +92,9 @@ function stateBuilder<S>(state: S, name: string) {
 
 function defineModule<
   S,
-  M extends MutationsPayload,
-  A extends ActionsPayload,
-  G extends GettersPayload
+  M extends IMutationsPayload,
+  A extends IActionsPayload,
+  G extends IGettersPayload
 >(
   name: string,
   state: S,
@@ -107,7 +107,7 @@ function defineModule<
   resetState(): void;
   updateState(params: Partial<S>): void;
 };
-function defineModule<S, M extends MutationsPayload, A extends ActionsPayload>(
+function defineModule<S, M extends IMutationsPayload, A extends IActionsPayload>(
   name: string,
   state: S,
   { actions, mutations }: { actions: A; mutations: M }
@@ -118,7 +118,7 @@ function defineModule<S, M extends MutationsPayload, A extends ActionsPayload>(
   resetState(): void;
   updateState(params: Partial<S>): void;
 };
-function defineModule<S, M extends MutationsPayload, G extends GettersPayload>(
+function defineModule<S, M extends IMutationsPayload, G extends IGettersPayload>(
   name: string,
   state: S,
   { mutations, getters }: { mutations: M; getters: G }
@@ -129,7 +129,7 @@ function defineModule<S, M extends MutationsPayload, G extends GettersPayload>(
   resetState(): void;
   updateState(params: Partial<S>): void;
 };
-function defineModule<S, A extends ActionsPayload, G extends GettersPayload>(
+function defineModule<S, A extends IActionsPayload, G extends IGettersPayload>(
   name: string,
   state: S,
   { actions, getters }: { actions: A; getters: G }
@@ -140,7 +140,7 @@ function defineModule<S, A extends ActionsPayload, G extends GettersPayload>(
   resetState(): void;
   updateState(params: Partial<S>): void;
 };
-function defineModule<S, M extends MutationsPayload>(
+function defineModule<S, M extends IMutationsPayload>(
   name: string,
   state: S,
   { mutations }: { mutations: M }
@@ -150,7 +150,7 @@ function defineModule<S, M extends MutationsPayload>(
   resetState(): void;
   updateState(params: Partial<S>): void;
 };
-function defineModule<S, A extends ActionsPayload>(
+function defineModule<S, A extends IActionsPayload>(
   name: string,
   state: S,
   { actions }: { actions: A }
@@ -161,7 +161,7 @@ function defineModule<S, A extends ActionsPayload>(
   updateState(params: Partial<S>): void;
 };
 function defineModule(name, state, vuexModule) {
-  if (!vuexModule.mutations) vuexModule.mutations = {};
+  if (!vuexModule.mutations) { vuexModule.mutations = {}; }
   vuexModule.mutations.resetState = moduleState => {
     Object.keys(state).map(key => {
       Vue.set(moduleState, key, state[key]);
