@@ -9,7 +9,6 @@ import {
   IGettersPayload
 } from "./types";
 import { enableHotReload } from "./hotModule";
-import { oc } from "ts-optchain";
 
 Vue.use(Vuex);
 
@@ -26,7 +25,12 @@ function createModuleTriggers(moduleName: string) {
   }
 
   function read(name) {
-    return () => oc(storeBuilder).getters[moduleName + "/" + name]();
+    return () => {
+      if (!storeBuilder || !storeBuilder.getters || !storeBuilder.getters[moduleName + "/" + name]) {
+        return null;
+      }
+      return storeBuilder.getters[moduleName + "/" + name];
+    };
   }
 
   return {
