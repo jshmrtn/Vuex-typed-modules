@@ -10,17 +10,41 @@ var __assign = (this && this.__assign) || function () {
     };
     return __assign.apply(this, arguments);
 };
+var __read = (this && this.__read) || function (o, n) {
+    var m = typeof Symbol === "function" && o[Symbol.iterator];
+    if (!m) return o;
+    var i = m.call(o), r, ar = [], e;
+    try {
+        while ((n === void 0 || n-- > 0) && !(r = i.next()).done) ar.push(r.value);
+    }
+    catch (error) { e = { error: error }; }
+    finally {
+        try {
+            if (r && !r.done && (m = i["return"])) m.call(i);
+        }
+        finally { if (e) throw e.error; }
+    }
+    return ar;
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 var builder_1 = require("./builder");
-var builder_2 = require("./builder");
 var hotModule_1 = require("./hotModule");
+function stateExists(state, _a) {
+    var _b = __read(_a), address = _b[0], path = _b.slice(1);
+    if (!address)
+        return true;
+    if (!state[address])
+        return false;
+    return stateExists(state[address], path);
+}
 var RegisterDynamicModule = (function () {
-    function RegisterDynamicModule(name, state, Vuexmodule) {
+    function RegisterDynamicModule(path, name, state, Vuexmodule) {
         this.mutations = {};
         this.actions = {};
         this.getters = {};
         this.newState = {};
         this.registered = false;
+        this.path = path;
         this.Vuexmodule = Vuexmodule;
         this.name = name;
         this.initialState = state;
@@ -34,12 +58,14 @@ var RegisterDynamicModule = (function () {
         });
     }
     RegisterDynamicModule.prototype.register = function () {
-        builder_2.storedModules[this.name] = __assign({ namespaced: true, state: this.initialState }, this.Vuexmodule);
-        if (!builder_1.storeBuilder.state[this.name] && !this.registered) {
-            builder_1.storeBuilder.registerModule(this.name, __assign({ namespaced: true, state: this.initialState }, this.Vuexmodule));
+        if (this.registered)
+            return;
+        builder_1.storeModule(this.path, this.initialState, __assign({ namespaced: true, state: this.initialState }, this.Vuexmodule));
+        if (!stateExists(builder_1.storeBuilder.state, this.path)) {
+            builder_1.storeBuilder.registerModule(this.path, __assign({ namespaced: true, state: this.initialState }, this.Vuexmodule));
             this.registered = true;
         }
-        if (builder_1.storeBuilder.state[this.name]) {
+        if (stateExists(builder_1.storeBuilder.state, this.path)) {
             var _a = builder_1.stateBuilder(this.initialState, this.name), registerGetters = _a.registerGetters, registerMutations = _a.registerMutations, registerActions = _a.registerActions, newState = _a.state;
             (this.mutations = registerMutations(this.Vuexmodule.mutations)),
                 (this.actions = registerActions(this.Vuexmodule.actions)),
@@ -50,7 +76,7 @@ var RegisterDynamicModule = (function () {
     RegisterDynamicModule.prototype.unregister = function () {
         if (!module.hot) {
             builder_1.storeBuilder.unregisterModule(this.name);
-            hotModule_1.disableHotReload(this.name);
+            hotModule_1.disableHotReload(this.path);
             this.mutations = {};
             this.actions = {};
             this.getters = {};
@@ -62,6 +88,8 @@ var RegisterDynamicModule = (function () {
 }());
 function defineDynamicModule(name, state, vuexModule) {
     hotModule_1.enableHotReload(name, state, vuexModule, true);
-    return new RegisterDynamicModule(name, state, vuexModule);
+    var path = Array.isArray(name) ? name : [name];
+    name = path.join('/');
+    return new RegisterDynamicModule(path, name, state, vuexModule);
 }
 exports.defineDynamicModule = defineDynamicModule;

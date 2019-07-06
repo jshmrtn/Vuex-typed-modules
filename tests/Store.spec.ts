@@ -1,6 +1,7 @@
 import { createLocalVue } from '@vue/test-utils';
 
 import { createStore, defineModule } from "../src";
+import { storedModules } from "../src/builder";
 
 import Vuex from 'vuex';
 
@@ -31,6 +32,7 @@ describe("Store", () => {
 
     afterEach((done) => {
       layout.resetState();
+      delete storedModules.layout;
       done();
     });
 
@@ -72,6 +74,42 @@ describe("Store", () => {
 
       done();
 
+    });
+  });
+
+  describe('Nested Modules', () => {
+    test("correctly nests modules", (done) => {
+      const levelOne = defineModule("levelOne", _cloneDeep(state), {
+        getters,
+        mutations,
+        actions,
+      });
+      const levelTwo = defineModule(["levelOne", "levelTwo"], _cloneDeep(state), {
+        getters,
+        mutations,
+        actions,
+      });
+      const store = createStore({
+        strict: true,
+        state: {},
+      });
+      expect(store.state.levelOne).toBeDefined();
+      expect(store.state.levelOne.levelTwo).toBeDefined();
+
+      delete storedModules.levelOne;
+
+      done();
+    });
+    test("gives meaningful error on missing parent", (done) => {
+      expect(() => {
+        defineModule(["levelOne", "levelTwo"], _cloneDeep(state), {
+          getters,
+          mutations,
+          actions,
+        });
+      }).toThrow();
+
+      done();
     });
   });
 });

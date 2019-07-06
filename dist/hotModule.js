@@ -12,13 +12,14 @@ var __assign = (this && this.__assign) || function () {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var builder_1 = require("./builder");
-function enableHotReload(name, state, vuexModule, dynamic) {
+function enableHotReload(path, state, vuexModule, dynamic) {
     if (module.hot) {
-        if (builder_1.storedModules[name] == null && !dynamic) {
-            builder_1.storedModules[name] = __assign({ namespaced: true, state: state }, vuexModule);
+        var appliedModule = builder_1.getStoredModule(path);
+        if (!appliedModule && !dynamic) {
+            builder_1.storeModule(path, state, vuexModule);
         }
-        else if (builder_1.storedModules[name] != null) {
-            builder_1.storedModules[name] = __assign({ namespaced: true, state: state }, vuexModule);
+        else if (appliedModule) {
+            Object.assign(appliedModule, __assign({ namespaced: true, state: state }, vuexModule));
             builder_1.storeBuilder.hotUpdate({
                 modules: __assign({}, builder_1.storedModules),
             });
@@ -27,7 +28,8 @@ function enableHotReload(name, state, vuexModule, dynamic) {
     }
 }
 exports.enableHotReload = enableHotReload;
-function disableHotReload(name) {
-    delete builder_1.storedModules[name];
+function disableHotReload(path) {
+    var parent = builder_1.getStoredModule(path.slice(0, -1));
+    delete parent.modules[path.slice(-1)[0]];
 }
 exports.disableHotReload = disableHotReload;

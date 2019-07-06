@@ -1,7 +1,13 @@
 import { ReturnedGetters, ReturnedActions, ReturnedMutations } from "./types";
-import { storeBuilder, stateBuilder } from "./builder";
+import { storeBuilder, stateBuilder, storeModule } from "./builder";
 import { storedModules } from "./builder";
 import { enableHotReload, disableHotReload } from "./hotModule";
+
+function stateExists(state: object, [address, ...path]: string[]) {
+  if (!address) { return true; }
+  if (!state[address]) { return false; }
+  return stateExists(state[address], path);
+}
 
 class RegisterDynamicModule {
   public mutations = {};
@@ -10,13 +16,15 @@ class RegisterDynamicModule {
 
   public Vuexmodule;
   public initialState;
+  public path;
   public name;
   public state;
   public newState = {};
 
   private registered = false;
 
-  constructor(name, state, Vuexmodule) {
+  constructor(path, name, state, Vuexmodule) {
+    this.path = path;
     this.Vuexmodule = Vuexmodule;
     this.name = name;
     this.initialState = state;
@@ -30,20 +38,21 @@ class RegisterDynamicModule {
     });
   }
   public register() {
-    storedModules[this.name] = {
+    if (this.registered) { return; }
+    storeModule(this.path, this.initialState, {
       namespaced: true,
       state: this.initialState,
       ...this.Vuexmodule
-    };
-    if (!storeBuilder.state[this.name] && !this.registered) {
-      storeBuilder.registerModule(this.name, {
+    });
+    if (!stateExists(storeBuilder.state, this.path)) {
+      storeBuilder.registerModule(this.path, {
         namespaced: true,
         state: this.initialState,
         ...this.Vuexmodule
       });
       this.registered = true;
     }
-    if (storeBuilder.state[this.name]) {
+    if (stateExists(storeBuilder.state, this.path)) {
       const {
         registerGetters,
         registerMutations,
@@ -59,7 +68,7 @@ class RegisterDynamicModule {
   public unregister() {
     if (!module.hot) {
       storeBuilder.unregisterModule(this.name);
-      disableHotReload(this.name);
+      disableHotReload(this.path);
       this.mutations = {};
       this.actions = {};
       this.getters = {};
@@ -75,7 +84,7 @@ function defineDynamicModule<
   A extends { [x: string]: (context, payload?) => any },
   G extends { [x: string]: (state) => any }
 >(
-  name: string,
+  name: string | string[],
   state: S,
   { actions, mutations, getters }: { actions: A; mutations: M; getters: G }
 ): {
@@ -93,7 +102,7 @@ function defineDynamicModule<
   M extends { [x: string]: (state, payload?) => void },
   A extends { [x: string]: (context, payload?) => any }
 >(
-  name: string,
+  name: string | string[],
   state: S,
   { actions, mutations }: { actions: A; mutations: M }
 ): {
@@ -110,7 +119,7 @@ function defineDynamicModule<
   M extends { [x: string]: (state, payload?) => void },
   G extends { [x: string]: (state) => any }
 >(
-  name: string,
+  name: string | string[],
   state: S,
   { mutations, getters }: { mutations: M; getters: G }
 ): {
@@ -127,7 +136,7 @@ function defineDynamicModule<
   A extends { [x: string]: (context, payload?) => any },
   G extends { [x: string]: (state) => any }
 >(
-  name: string,
+  name: string | string[],
   state: S,
   { actions, getters }: { actions: A; getters: G }
 ): {
@@ -143,7 +152,7 @@ function defineDynamicModule<
   S,
   M extends { [x: string]: (state, payload?) => void }
 >(
-  name: string,
+  name: string | string[],
   state: S,
   { mutations }: { mutations: M }
 ): {
@@ -158,7 +167,7 @@ function defineDynamicModule<
   S,
   A extends { [x: string]: (context, payload?) => any }
 >(
-  name: string,
+  name: string | string[],
   state: S,
   { actions }: { actions: A }
 ): {
@@ -171,7 +180,9 @@ function defineDynamicModule<
 };
 function defineDynamicModule(name, state, vuexModule) {
   enableHotReload(name, state, vuexModule, true);
-  return new RegisterDynamicModule(name, state, vuexModule) as any;
+  const path = Array.isArray(name) ? name : [name];
+  name = path.join('/');
+  return new RegisterDynamicModule(path, name, state, vuexModule) as any;
 }
 
 export { defineDynamicModule };

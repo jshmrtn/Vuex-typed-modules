@@ -5,7 +5,7 @@ declare function defineDynamicModule<S, M extends {
     [x: string]: (context: any, payload?: any) => any;
 }, G extends {
     [x: string]: (state: any) => any;
-}>(name: string, state: S, { actions, mutations, getters }: {
+}>(name: string | string[], state: S, { actions, mutations, getters }: {
     actions: A;
     mutations: M;
     getters: G;
@@ -23,7 +23,7 @@ declare function defineDynamicModule<S, M extends {
     [x: string]: (state: any, payload?: any) => void;
 }, A extends {
     [x: string]: (context: any, payload?: any) => any;
-}>(name: string, state: S, { actions, mutations }: {
+}>(name: string | string[], state: S, { actions, mutations }: {
     actions: A;
     mutations: M;
 }): {
@@ -39,7 +39,7 @@ declare function defineDynamicModule<S, M extends {
     [x: string]: (state: any, payload?: any) => void;
 }, G extends {
     [x: string]: (state: any) => any;
-}>(name: string, state: S, { mutations, getters }: {
+}>(name: string | string[], state: S, { mutations, getters }: {
     mutations: M;
     getters: G;
 }): {
@@ -55,7 +55,7 @@ declare function defineDynamicModule<S, A extends {
     [x: string]: (context: any, payload?: any) => any;
 }, G extends {
     [x: string]: (state: any) => any;
-}>(name: string, state: S, { actions, getters }: {
+}>(name: string | string[], state: S, { actions, getters }: {
     actions: A;
     getters: G;
 }): {
@@ -69,7 +69,7 @@ declare function defineDynamicModule<S, A extends {
 };
 declare function defineDynamicModule<S, M extends {
     [x: string]: (state: any, payload?: any) => void;
-}>(name: string, state: S, { mutations }: {
+}>(name: string | string[], state: S, { mutations }: {
     mutations: M;
 }): {
     mutations: ReturnedMutations<M>;
@@ -81,7 +81,7 @@ declare function defineDynamicModule<S, M extends {
 };
 declare function defineDynamicModule<S, A extends {
     [x: string]: (context: any, payload?: any) => any;
-}>(name: string, state: S, { actions }: {
+}>(name: string | string[], state: S, { actions }: {
     actions: A;
 }): {
     actions: ReturnedActions<A>;

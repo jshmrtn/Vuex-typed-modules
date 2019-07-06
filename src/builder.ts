@@ -15,6 +15,13 @@ Vue.use(Vuex);
 let storeBuilder: Store<any> = null;
 const storedModules: any = {};
 
+function getStoredModule(path: ReadonlyArray<string>) {
+  return path.reduce((acc, name) => {
+    if (!acc) { return acc; }
+    return acc.modules[name];
+  }, {modules: storedModules});
+}
+
 function createModuleTriggers(moduleName: string) {
   function commit(name) {
     return payload => storeBuilder.commit(moduleName + "/" + name, payload);
@@ -100,7 +107,7 @@ function defineModule<
   A extends IActionsPayload,
   G extends IGettersPayload
 >(
-  name: string,
+  name: string | string[],
   state: S,
   { actions, mutations, getters }: { actions: A; mutations: M; getters: G }
 ): {
@@ -112,7 +119,7 @@ function defineModule<
   updateState(params: Partial<S>): void;
 };
 function defineModule<S, M extends IMutationsPayload, A extends IActionsPayload>(
-  name: string,
+  name: string | string[],
   state: S,
   { actions, mutations }: { actions: A; mutations: M }
 ): {
@@ -123,7 +130,7 @@ function defineModule<S, M extends IMutationsPayload, A extends IActionsPayload>
   updateState(params: Partial<S>): void;
 };
 function defineModule<S, M extends IMutationsPayload, G extends IGettersPayload>(
-  name: string,
+  name: string| string[],
   state: S,
   { mutations, getters }: { mutations: M; getters: G }
 ): {
@@ -134,7 +141,7 @@ function defineModule<S, M extends IMutationsPayload, G extends IGettersPayload>
   updateState(params: Partial<S>): void;
 };
 function defineModule<S, A extends IActionsPayload, G extends IGettersPayload>(
-  name: string,
+  name: string| string[],
   state: S,
   { actions, getters }: { actions: A; getters: G }
 ): {
@@ -145,7 +152,7 @@ function defineModule<S, A extends IActionsPayload, G extends IGettersPayload>(
   updateState(params: Partial<S>): void;
 };
 function defineModule<S, M extends IMutationsPayload>(
-  name: string,
+  name: string| string[],
   state: S,
   { mutations }: { mutations: M }
 ): {
@@ -155,7 +162,7 @@ function defineModule<S, M extends IMutationsPayload>(
   updateState(params: Partial<S>): void;
 };
 function defineModule<S, A extends IActionsPayload>(
-  name: string,
+  name: string | string[],
   state: S,
   { actions }: { actions: A }
 ): {
@@ -165,6 +172,9 @@ function defineModule<S, A extends IActionsPayload>(
   updateState(params: Partial<S>): void;
 };
 function defineModule(name, state, vuexModule) {
+  const path = Array.isArray(name) ? name : [name];
+  name = path.join('/');
+
   if (!vuexModule.mutations) { vuexModule.mutations = {}; }
   vuexModule.mutations.resetState = moduleState => {
     Object.keys(state).map(key => {
@@ -177,13 +187,9 @@ function defineModule(name, state, vuexModule) {
     });
   };
   if (module.hot) {
-    enableHotReload(name, state, vuexModule);
+    enableHotReload(path, state, vuexModule);
   } else {
-    storedModules[name] = {
-      namespaced: true,
-      state,
-      ...vuexModule
-    };
+    storeModule(path, state, vuexModule);
   }
 
   const {
@@ -207,6 +213,21 @@ function defineModule(name, state, vuexModule) {
       return newState();
     }
   } as any;
+}
+
+function storeModule(path, state, vuexModule) {
+  const parentModule = getStoredModule(path.slice(0, -1));
+
+  if (!parentModule) {
+    throw new Error(`Parent Module of ${path.join('/')} not found`);
+  }
+
+  parentModule.modules[path.slice(-1)[0]] = {
+    namespaced: true,
+    modules: {},
+    state,
+    ...vuexModule,
+  };
 }
 
 function createStore({ strict = false, ...options }: StoreOptions<any>) {
@@ -234,4 +255,4 @@ function createStore({ strict = false, ...options }: StoreOptions<any>) {
   return storeBuilder;
 }
 
-export { storeBuilder, createStore, stateBuilder, defineModule, storedModules };
+export { storeBuilder, createStore, stateBuilder, defineModule, storedModules, getStoredModule, storeModule };

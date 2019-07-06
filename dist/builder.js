@@ -33,6 +33,14 @@ var storeBuilder = null;
 exports.storeBuilder = storeBuilder;
 var storedModules = {};
 exports.storedModules = storedModules;
+function getStoredModule(path) {
+    return path.reduce(function (acc, name) {
+        if (!acc)
+            return acc;
+        return acc.modules[name];
+    }, { modules: storedModules });
+}
+exports.getStoredModule = getStoredModule;
 function createModuleTriggers(moduleName) {
     function commit(name) {
         return function (payload) { return storeBuilder.commit(moduleName + "/" + name, payload); };
@@ -99,6 +107,8 @@ function stateBuilder(state, name) {
 }
 exports.stateBuilder = stateBuilder;
 function defineModule(name, state, vuexModule) {
+    var path = Array.isArray(name) ? name : [name];
+    name = path.join('/');
     if (!vuexModule.mutations) {
         vuexModule.mutations = {};
     }
@@ -113,10 +123,10 @@ function defineModule(name, state, vuexModule) {
         });
     };
     if (module.hot) {
-        hotModule_1.enableHotReload(name, state, vuexModule);
+        hotModule_1.enableHotReload(path, state, vuexModule);
     }
     else {
-        storedModules[name] = __assign({ namespaced: true, state: state }, vuexModule);
+        storeModule(path, state, vuexModule);
     }
     var _a = stateBuilder(state, name), registerGetters = _a.registerGetters, registerMutations = _a.registerMutations, registerActions = _a.registerActions, newState = _a.state;
     return {
@@ -135,6 +145,14 @@ function defineModule(name, state, vuexModule) {
     };
 }
 exports.defineModule = defineModule;
+function storeModule(path, state, vuexModule) {
+    var parentModule = getStoredModule(path.slice(0, -1));
+    if (!parentModule) {
+        throw "Parent Module of " + path.join('/') + " not found";
+    }
+    parentModule.modules[path.slice(-1)[0]] = __assign({ namespaced: true, modules: {}, state: state }, vuexModule);
+}
+exports.storeModule = storeModule;
 function createStore(_a) {
     var _b = _a.strict, strict = _b === void 0 ? false : _b, options = __rest(_a, ["strict"]);
     exports.storeBuilder = storeBuilder = new vuex_1.default.Store(__assign({ strict: strict }, options, { modules: storedModules }));

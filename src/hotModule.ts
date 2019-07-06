@@ -1,19 +1,17 @@
-import { storeBuilder, storedModules } from './builder';
+import { storeBuilder, storedModules, getStoredModule, storeModule } from './builder';
 
-export function enableHotReload(name, state, vuexModule, dynamic?: boolean) {
+export function enableHotReload(path, state, vuexModule, dynamic?: boolean) {
   if (module.hot) {
-    if (storedModules[name] == null && !dynamic) {
-      storedModules[name] = {
+    const appliedModule = getStoredModule(path) as object | null;
+    if (!appliedModule && !dynamic) {
+      storeModule(path, state, vuexModule);
+    } else if (appliedModule) {
+      Object.assign(appliedModule, {
         namespaced: true,
         state,
         ...vuexModule,
-      };
-    } else if (storedModules[name] != null) {
-      storedModules[name] = {
-        namespaced: true,
-        state,
-        ...vuexModule,
-      };
+      });
+
       storeBuilder.hotUpdate({
         modules: {
           ...storedModules,
@@ -29,6 +27,7 @@ export function enableHotReload(name, state, vuexModule, dynamic?: boolean) {
   }
 }
 
-export function disableHotReload(name) {
-  delete storedModules[name];
+export function disableHotReload(path) {
+  const parent = getStoredModule(path.slice(0, -1));
+  delete parent.modules[path.slice(-1)[0]];
 }
