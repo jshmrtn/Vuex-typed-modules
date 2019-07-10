@@ -1,10 +1,7 @@
-import Vue from "vue";
 import Vuex from "vuex";
 import { createStore } from "../../src";
 
-import "./layout";
-
-Vue.use(Vuex);
+import "./module";
 
 const store = createStore({
   strict: true,
@@ -12,3 +9,5 @@ const store = createStore({
 });
 
 export default store;
+
+export interface RootState {}

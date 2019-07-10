@@ -1,12 +1,9 @@
-import { createLocalVue } from '@vue/test-utils';
-
 import { createStore, defineModule, defineDynamicModule } from "../src";
 import { resetStoredModules } from "../src/builder";
 
 import Vuex from 'vuex';
 
-import { actions, getters, mutations } from "./src/layout/module";
-import { state } from "./src/layout";
+import { actions, getters, mutations, state } from "./src/module";
 
 import _cloneDeep from "lodash/cloneDeep";
 
@@ -20,26 +17,24 @@ describe("Store", () => {
   Object.entries({ static: defineModule, dynamic: defineDynamicModule}).forEach(([name, constructor]) => {
 
     describe(`${name}: Base Capabilities`, () => {
-      let layout;
+      let module;
       let localVue;
       let store;
 
       beforeEach((done) => {
-        layout = constructor("layout", state, {
+        module = constructor("module", state, {
           getters,
           mutations,
           actions,
         });
 
-        localVue = createLocalVue();
-        localVue.use(Vuex);
         store = createStore({
           strict: true,
           state: {},
         });
 
         if (constructor === defineDynamicModule) {
-          layout.register();
+          module.register();
         }
 
         done();
@@ -47,80 +42,54 @@ describe("Store", () => {
       });
 
       afterEach((done) => {
-        layout.resetState();
+        module.resetState();
 
         if (constructor === defineDynamicModule) {
-          layout.unregister();
+          module.unregister();
         }
 
         done();
       });
 
-      test('changes "backgroundColor" value when "setBackgroundColor" is commited', () => {
+      test('changes "property" value when "setProperty" is commited', () => {
 
-        expect(layout.state.backgroundColor).toBe("red");
-        expect(store.state.layout.backgroundColor).toBe("red");
-        expect(layout.getters.backgroundColor).toBe("red");
+        expect(module.state.property).toBe("red");
+        expect(store.state.module.property).toBe("red");
+        expect(module.getters.property).toBe("red");
 
-        layout.mutations.setBackgroundColor("blue");
+        module.mutations.setProperty("blue");
 
-        expect(layout.state.backgroundColor).toBe("blue");
-        expect(store.state.layout.backgroundColor).toBe("blue");
-        expect(layout.getters.backgroundColor).toBe("blue");
-
-      });
-
-      test('changes "stickyHeader" value when "toggleStickyHeader" is commited', () => {
-
-        expect(layout.state.stickyHeader).toBeFalsy();
-        expect(store.state.layout.stickyHeader).toBeFalsy();
-
-        layout.mutations.toggleStickyHeader();
-
-        expect(layout.state.stickyHeader).toBeTruthy();
-        expect(store.state.layout.stickyHeader).toBeTruthy();
+        expect(module.state.property).toBe("blue");
+        expect(store.state.module.property).toBe("blue");
+        expect(module.getters.property).toBe("blue");
 
       });
+      
+      test('changes "property" value to "red" when "load" is dispatched', async (done) => {
 
-      test('changes "backgroundColor" value to "red" when "loadBackgroundColor" is dispatched', async (done) => {
+        module.mutations.setProperty("blue");
 
-        layout.mutations.setBackgroundColor("blue");
+        expect(module.state.property).toBe("blue");
+        expect(store.state.module.property).toBe("blue");
 
-        expect(layout.state.backgroundColor).toBe("blue");
-        expect(store.state.layout.backgroundColor).toBe("blue");
+        await module.actions.load();
 
-        await layout.actions.loadBackgroundColor();
-
-        expect(layout.state.backgroundColor).toBe("red");
-        expect(store.state.layout.backgroundColor).toBe("red");
+        expect(module.state.property).toBe("red");
+        expect(store.state.module.property).toBe("red");
 
         done();
 
-      });
-
-      test('reactivity', async (done) => {
-        store.watch(
-          (_state, getters) => getters['layout/backgroundColor'],
-          (newValue, oldValue) => {
-            console.log("newValue", newValue);
-            console.log("oldValue", oldValue);
-            expect(newValue).toBe("blue");
-            expect(oldValue).toBe("red");
-            done();
-          }
-        );
-        layout.mutations.setBackgroundColor("blue");
       });
 
       test('reactivity', async (done) => {
         const spy = jest.fn();
 
         store.watch(
-          (_state, getters) => getters['layout/backgroundColor'],
+          (_state, getters) => getters['module/property'],
           spy
         );
 
-        layout.mutations.setBackgroundColor("blue");
+        module.mutations.setProperty("blue");
 
         await new Promise((resolve) => {
           setTimeout(resolve, 1000);
@@ -138,62 +107,56 @@ describe("Store", () => {
   describe('resetState', () => {
     test('resetState correctly resets state in static module', async (done) => {
 
-      const layout = defineModule("layout", state, {
+      const module = defineModule("module", state, {
         getters,
         mutations,
         actions,
       });
-
-      const localVue = createLocalVue();
-      localVue.use(Vuex);
 
       createStore({
         strict: true,
         state: {},
       });
 
-      layout.mutations.setBackgroundColor("blue");
+      module.mutations.setProperty("blue");
 
-      expect(layout.state.backgroundColor).toBe("blue");
+      expect(module.state.property).toBe("blue");
 
-      layout.resetState();
+      module.resetState();
 
-      expect(layout.state.backgroundColor).toBe("red");
+      expect(module.state.property).toBe("red");
 
-      layout.resetState();
+      module.resetState();
 
       done();
     });
 
     test('resetState correctly resets state in dynamic module', async (done) => {
 
-      const layout = defineDynamicModule("layout", state, {
+      const module = defineDynamicModule("module", state, {
         getters,
         mutations,
         actions,
       });
-
-      const localVue = createLocalVue();
-      localVue.use(Vuex);
 
       createStore({
         strict: true,
         state: {},
       });
 
-      layout.register();
+      module.register();
 
-      expect(layout.state.backgroundColor).toBe("red");
+      expect(module.state.property).toBe("red");
 
-      layout.mutations.setBackgroundColor("blue");
+      module.mutations.setProperty("blue");
 
-      expect(layout.state.backgroundColor).toBe("blue");
+      expect(module.state.property).toBe("blue");
 
-      layout.resetState();
+      module.resetState();
 
-      expect(layout.state.backgroundColor).toBe("red");
+      expect(module.state.property).toBe("red");
 
-      layout.unregister();
+      module.unregister();
 
       done();
 
