@@ -19,15 +19,15 @@ class RegisterDynamicModule {
 
   public newState;
 
-  public initialState;
+  public stateFactory;
 
   private registered = false;
 
-  constructor(path, name, initialState, Vuexmodule) {
+  constructor(path, name, stateFactory, Vuexmodule) {
     this.path = path;
     this.Vuexmodule = Vuexmodule;
     this.name = name;
-    this.initialState = initialState;
+    this.stateFactory = stateFactory;
   }
 
   public resetState() {
@@ -46,16 +46,17 @@ class RegisterDynamicModule {
   }
 
   public register() {
+    const initialState = this.stateFactory();
     if (this.registered) { return; }
-    storeModule(this.path, this.initialState, {
+    storeModule(this.path, initialState, {
       namespaced: true,
-      state: this.initialState,
+      state: initialState,
       ...this.Vuexmodule
     });
     if (!stateExists(storeBuilder.state, this.path)) {
       storeBuilder.registerModule(this.path, {
         namespaced: true,
-        state: this.initialState,
+        state: initialState,
         ...this.Vuexmodule
       });
       this.registered = true;
@@ -66,7 +67,7 @@ class RegisterDynamicModule {
         registerMutations,
         registerActions,
         state: newState
-      } = stateBuilder(this.initialState, this.name);
+      } = stateBuilder(initialState, this.name);
       this.mutations = registerMutations(this.Vuexmodule.mutations);
       this.actions = registerActions(this.Vuexmodule.actions);
       this.getters = registerGetters(this.Vuexmodule.getters);
@@ -92,7 +93,7 @@ export function defineDynamicModule<
   G extends { [x: string]: (state) => any }
 >(
   name: string | string[],
-  state: S,
+  stateFactory: () => S,
   { actions, mutations, getters }: { actions: A; mutations: M; getters: G }
 ): {
   getters: ReturnedGetters<G>;
@@ -110,7 +111,7 @@ export function defineDynamicModule<
   A extends { [x: string]: (context, payload?) => any }
 >(
   name: string | string[],
-  state: S,
+  stateFactory: () => S,
   { actions, mutations }: { actions: A; mutations: M }
 ): {
   actions: ReturnedActions<A>;
@@ -127,7 +128,7 @@ export function defineDynamicModule<
   G extends { [x: string]: (state) => any }
 >(
   name: string | string[],
-  state: S,
+  stateFactory: () => S,
   { mutations, getters }: { mutations: M; getters: G }
 ): {
   getters: ReturnedGetters<G>;
@@ -144,7 +145,7 @@ export function defineDynamicModule<
   G extends { [x: string]: (state) => any }
 >(
   name: string | string[],
-  state: S,
+  stateFactory: () => S,
   { actions, getters }: { actions: A; getters: G }
 ): {
   getters: ReturnedGetters<G>;
@@ -160,7 +161,7 @@ export function defineDynamicModule<
   M extends { [x: string]: (state, payload?) => void }
 >(
   name: string | string[],
-  state: S,
+  stateFactory: () => S,
   { mutations }: { mutations: M }
 ): {
   mutations: ReturnedMutations<M>;
@@ -175,7 +176,7 @@ export function defineDynamicModule<
   A extends { [x: string]: (context, payload?) => any }
 >(
   name: string | string[],
-  state: S,
+  stateFactory: () => S,
   { actions }: { actions: A }
 ): {
   actions: ReturnedActions<A>;
@@ -185,10 +186,10 @@ export function defineDynamicModule<
   resetState(): void;
   updateState(params: Partial<S>): void;
 };
-export function defineDynamicModule(name, state, vuexModule) {
-  vuexModule = addNativeMutations(vuexModule, state);
-  enableHotReload(name, state, vuexModule, true);
+export function defineDynamicModule(name, stateFactory, vuexModule) {
+  vuexModule = addNativeMutations(vuexModule, stateFactory);
+  enableHotReload(name, stateFactory, vuexModule, true);
   const path = Array.isArray(name) ? name : [name];
   name = path.join('/');
-  return new RegisterDynamicModule(path, name, state, vuexModule) as any;
+  return new RegisterDynamicModule(path, name, stateFactory, vuexModule) as any;
 }

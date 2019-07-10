@@ -111,7 +111,7 @@ export function defineModule<
   G extends IGettersPayload
 >(
   name: string | string[],
-  state: S,
+  stateFactory: () => S,
   { actions, mutations, getters }: { actions: A; mutations: M; getters: G }
 ): {
   getters: ReturnedGetters<G>;
@@ -123,7 +123,7 @@ export function defineModule<
 };
 export function defineModule<S, M extends IMutationsPayload, A extends IActionsPayload>(
   name: string | string[],
-  state: S,
+  stateFactory: () => S,
   { actions, mutations }: { actions: A; mutations: M }
 ): {
   actions: ReturnedActions<A>;
@@ -134,7 +134,7 @@ export function defineModule<S, M extends IMutationsPayload, A extends IActionsP
 };
 export function defineModule<S, M extends IMutationsPayload, G extends IGettersPayload>(
   name: string| string[],
-  state: S,
+  stateFactory: () => S,
   { mutations, getters }: { mutations: M; getters: G }
 ): {
   getters: ReturnedGetters<G>;
@@ -145,7 +145,7 @@ export function defineModule<S, M extends IMutationsPayload, G extends IGettersP
 };
 export function defineModule<S, A extends IActionsPayload, G extends IGettersPayload>(
   name: string| string[],
-  state: S,
+  stateFactory: () => S,
   { actions, getters }: { actions: A; getters: G }
 ): {
   getters: ReturnedGetters<G>;
@@ -156,7 +156,7 @@ export function defineModule<S, A extends IActionsPayload, G extends IGettersPay
 };
 export function defineModule<S, M extends IMutationsPayload>(
   name: string| string[],
-  state: S,
+  stateFactory: () => S,
   { mutations }: { mutations: M }
 ): {
   mutations: ReturnedMutations<M>;
@@ -166,7 +166,7 @@ export function defineModule<S, M extends IMutationsPayload>(
 };
 export function defineModule<S, A extends IActionsPayload>(
   name: string | string[],
-  state: S,
+  stateFactory: () => S,
   { actions }: { actions: A }
 ): {
   actions: ReturnedActions<A>;
@@ -174,11 +174,13 @@ export function defineModule<S, A extends IActionsPayload>(
   resetState(): void;
   updateState(params: Partial<S>): void;
 };
-export function defineModule(name, stateInstance, vuexModule) {
+export function defineModule(name, stateFactory, vuexModule) {
   const path = Array.isArray(name) ? name : [name];
   name = path.join('/');
 
-  vuexModule = addNativeMutations(vuexModule, stateInstance);
+  const stateInstance = stateFactory();
+
+  vuexModule = addNativeMutations(vuexModule, stateFactory);
 
   if (module.hot) {
     enableHotReload(path, stateInstance, vuexModule);
@@ -209,10 +211,10 @@ export function defineModule(name, stateInstance, vuexModule) {
   } as any;
 }
 
-export function addNativeMutations(vuexModule, initialState) {
+export function addNativeMutations(vuexModule, stateFactory) {
   if (!vuexModule.mutations) { vuexModule.mutations = {}; }
-
   vuexModule.mutations.resetState = moduleState => {
+    const initialState = stateFactory();
     Object.keys(initialState).map(key => {
       Vue.set(moduleState, key, initialState[key]);
     });

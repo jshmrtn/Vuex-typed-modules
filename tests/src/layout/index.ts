@@ -10,7 +10,7 @@ export function state(): LayoutModule.ModuleState {
   };
 }
 
-export const layout = defineModule("layout", state(), {
+export const layout = defineModule("layout", state, {
   getters,
   mutations,
   actions,

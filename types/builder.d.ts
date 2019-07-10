@@ -9,7 +9,7 @@ export declare function stateBuilder<S>(state: S, name: string): {
     registerGetters: <T extends IGettersPayload>(getters: T) => ReturnedGetters<T>;
     state: () => any;
 };
-export declare function defineModule<S, M extends IMutationsPayload, A extends IActionsPayload, G extends IGettersPayload>(name: string | string[], state: S, { actions, mutations, getters }: {
+export declare function defineModule<S, M extends IMutationsPayload, A extends IActionsPayload, G extends IGettersPayload>(name: string | string[], stateFactory: () => S, { actions, mutations, getters }: {
     actions: A;
     mutations: M;
     getters: G;
@@ -21,7 +21,7 @@ export declare function defineModule<S, M extends IMutationsPayload, A extends I
     resetState(): void;
     updateState(params: Partial<S>): void;
 };
-export declare function defineModule<S, M extends IMutationsPayload, A extends IActionsPayload>(name: string | string[], state: S, { actions, mutations }: {
+export declare function defineModule<S, M extends IMutationsPayload, A extends IActionsPayload>(name: string | string[], stateFactory: () => S, { actions, mutations }: {
     actions: A;
     mutations: M;
 }): {
@@ -31,7 +31,7 @@ export declare function defineModule<S, M extends IMutationsPayload, A extends I
     resetState(): void;
     updateState(params: Partial<S>): void;
 };
-export declare function defineModule<S, M extends IMutationsPayload, G extends IGettersPayload>(name: string | string[], state: S, { mutations, getters }: {
+export declare function defineModule<S, M extends IMutationsPayload, G extends IGettersPayload>(name: string | string[], stateFactory: () => S, { mutations, getters }: {
     mutations: M;
     getters: G;
 }): {
@@ -41,7 +41,7 @@ export declare function defineModule<S, M extends IMutationsPayload, G extends I
     resetState(): void;
     updateState(params: Partial<S>): void;
 };
-export declare function defineModule<S, A extends IActionsPayload, G extends IGettersPayload>(name: string | string[], state: S, { actions, getters }: {
+export declare function defineModule<S, A extends IActionsPayload, G extends IGettersPayload>(name: string | string[], stateFactory: () => S, { actions, getters }: {
     actions: A;
     getters: G;
 }): {
@@ -51,7 +51,7 @@ export declare function defineModule<S, A extends IActionsPayload, G extends IGe
     resetState(): void;
     updateState(params: Partial<S>): void;
 };
-export declare function defineModule<S, M extends IMutationsPayload>(name: string | string[], state: S, { mutations }: {
+export declare function defineModule<S, M extends IMutationsPayload>(name: string | string[], stateFactory: () => S, { mutations }: {
     mutations: M;
 }): {
     mutations: ReturnedMutations<M>;
@@ -59,7 +59,7 @@ export declare function defineModule<S, M extends IMutationsPayload>(name: strin
     resetState(): void;
     updateState(params: Partial<S>): void;
 };
-export declare function defineModule<S, A extends IActionsPayload>(name: string | string[], state: S, { actions }: {
+export declare function defineModule<S, A extends IActionsPayload>(name: string | string[], stateFactory: () => S, { actions }: {
     actions: A;
 }): {
     actions: ReturnedActions<A>;
@@ -67,7 +67,7 @@ export declare function defineModule<S, A extends IActionsPayload>(name: string 
     resetState(): void;
     updateState(params: Partial<S>): void;
 };
-export declare function addNativeMutations(vuexModule: any, initialState: any): any;
+export declare function addNativeMutations(vuexModule: any, stateFactory: any): any;
 export declare function storeModule(path: any, state: any, vuexModule: any): void;
 export declare function prepareModules(): {};
 export declare function createStore({ strict, ...options }: StoreOptions<any>): Store<any>;

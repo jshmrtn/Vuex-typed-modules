@@ -40,7 +40,7 @@ function stateExists(state, _a) {
     return stateExists(state[address], path);
 }
 var RegisterDynamicModule = (function () {
-    function RegisterDynamicModule(path, name, initialState, Vuexmodule) {
+    function RegisterDynamicModule(path, name, stateFactory, Vuexmodule) {
         this.mutations = {};
         this.actions = {};
         this.getters = {};
@@ -48,7 +48,7 @@ var RegisterDynamicModule = (function () {
         this.path = path;
         this.Vuexmodule = Vuexmodule;
         this.name = name;
-        this.initialState = initialState;
+        this.stateFactory = stateFactory;
     }
     RegisterDynamicModule.prototype.resetState = function () {
         builder_1.storeBuilder.commit(this.name + "/resetState");
@@ -67,16 +67,17 @@ var RegisterDynamicModule = (function () {
         configurable: true
     });
     RegisterDynamicModule.prototype.register = function () {
+        var initialState = this.stateFactory();
         if (this.registered) {
             return;
         }
-        builder_1.storeModule(this.path, this.initialState, __assign({ namespaced: true, state: this.initialState }, this.Vuexmodule));
+        builder_1.storeModule(this.path, initialState, __assign({ namespaced: true, state: initialState }, this.Vuexmodule));
         if (!stateExists(builder_1.storeBuilder.state, this.path)) {
-            builder_1.storeBuilder.registerModule(this.path, __assign({ namespaced: true, state: this.initialState }, this.Vuexmodule));
+            builder_1.storeBuilder.registerModule(this.path, __assign({ namespaced: true, state: initialState }, this.Vuexmodule));
             this.registered = true;
         }
         if (stateExists(builder_1.storeBuilder.state, this.path)) {
-            var _a = builder_1.stateBuilder(this.initialState, this.name), registerGetters = _a.registerGetters, registerMutations = _a.registerMutations, registerActions = _a.registerActions, newState = _a.state;
+            var _a = builder_1.stateBuilder(initialState, this.name), registerGetters = _a.registerGetters, registerMutations = _a.registerMutations, registerActions = _a.registerActions, newState = _a.state;
             this.mutations = registerMutations(this.Vuexmodule.mutations);
             this.actions = registerActions(this.Vuexmodule.actions);
             this.getters = registerGetters(this.Vuexmodule.getters);
@@ -95,11 +96,11 @@ var RegisterDynamicModule = (function () {
     };
     return RegisterDynamicModule;
 }());
-function defineDynamicModule(name, state, vuexModule) {
-    vuexModule = builder_1.addNativeMutations(vuexModule, state);
-    hotModule_1.enableHotReload(name, state, vuexModule, true);
+function defineDynamicModule(name, stateFactory, vuexModule) {
+    vuexModule = builder_1.addNativeMutations(vuexModule, stateFactory);
+    hotModule_1.enableHotReload(name, stateFactory, vuexModule, true);
     var path = Array.isArray(name) ? name : [name];
     name = path.join('/');
-    return new RegisterDynamicModule(path, name, state, vuexModule);
+    return new RegisterDynamicModule(path, name, stateFactory, vuexModule);
 }
 exports.defineDynamicModule = defineDynamicModule;

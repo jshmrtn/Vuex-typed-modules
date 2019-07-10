@@ -109,10 +109,11 @@ function stateBuilder(state, name) {
     };
 }
 exports.stateBuilder = stateBuilder;
-function defineModule(name, stateInstance, vuexModule) {
+function defineModule(name, stateFactory, vuexModule) {
     var path = Array.isArray(name) ? name : [name];
     name = path.join('/');
-    vuexModule = addNativeMutations(vuexModule, stateInstance);
+    var stateInstance = stateFactory();
+    vuexModule = addNativeMutations(vuexModule, stateFactory);
     if (module.hot) {
         hotModule_1.enableHotReload(path, stateInstance, vuexModule);
     }
@@ -136,11 +137,12 @@ function defineModule(name, stateInstance, vuexModule) {
     };
 }
 exports.defineModule = defineModule;
-function addNativeMutations(vuexModule, initialState) {
+function addNativeMutations(vuexModule, stateFactory) {
     if (!vuexModule.mutations) {
         vuexModule.mutations = {};
     }
     vuexModule.mutations.resetState = function (moduleState) {
+        var initialState = stateFactory();
         Object.keys(initialState).map(function (key) {
             vue_1.default.set(moduleState, key, initialState[key]);
         });

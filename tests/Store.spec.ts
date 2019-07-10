@@ -25,7 +25,7 @@ describe("Store", () => {
       let store;
 
       beforeEach((done) => {
-        layout = constructor("layout", state(), {
+        layout = constructor("layout", state, {
           getters,
           mutations,
           actions,
@@ -43,6 +43,7 @@ describe("Store", () => {
         }
 
         done();
+
       });
 
       afterEach((done) => {
@@ -98,6 +99,20 @@ describe("Store", () => {
       });
 
       test('reactivity', async (done) => {
+        store.watch(
+          (_state, getters) => getters['layout/backgroundColor'],
+          (newValue, oldValue) => {
+            console.log("newValue", newValue);
+            console.log("oldValue", oldValue);
+            expect(newValue).toBe("blue");
+            expect(oldValue).toBe("red");
+            done();
+          }
+        );
+        layout.mutations.setBackgroundColor("blue");
+      });
+
+      test('reactivity', async (done) => {
         const spy = jest.fn();
 
         store.watch(
@@ -120,9 +135,75 @@ describe("Store", () => {
 
   });
 
+  describe('resetState', () => {
+    test('resetState correctly resets state in static module', async (done) => {
+
+      const layout = defineModule("layout", state, {
+        getters,
+        mutations,
+        actions,
+      });
+
+      const localVue = createLocalVue();
+      localVue.use(Vuex);
+
+      createStore({
+        strict: true,
+        state: {},
+      });
+
+      layout.mutations.setBackgroundColor("blue");
+
+      expect(layout.state.backgroundColor).toBe("blue");
+
+      layout.resetState();
+
+      expect(layout.state.backgroundColor).toBe("red");
+
+      layout.resetState();
+
+      done();
+    });
+
+    test('resetState correctly resets state in dynamic module', async (done) => {
+
+      const layout = defineDynamicModule("layout", state, {
+        getters,
+        mutations,
+        actions,
+      });
+
+      const localVue = createLocalVue();
+      localVue.use(Vuex);
+
+      createStore({
+        strict: true,
+        state: {},
+      });
+
+      layout.register();
+
+      expect(layout.state.backgroundColor).toBe("red");
+
+      layout.mutations.setBackgroundColor("blue");
+
+      expect(layout.state.backgroundColor).toBe("blue");
+
+      layout.resetState();
+
+      expect(layout.state.backgroundColor).toBe("red");
+
+      layout.unregister();
+
+      done();
+
+    });
+
+  });
+
   describe('Nested Modules', () => {
     test("correctly nests modules", (done) => {
-      const levelOne = defineModule("levelOne", state(), {
+      const levelOne = defineModule("levelOne", state, {
         getters,
         mutations,
         actions,
@@ -143,7 +224,7 @@ describe("Store", () => {
     });
     test("gives meaningful error on missing parent", (done) => {
       expect(() => {
-        defineModule(["levelOne", "levelTwo"], state(), {
+        defineModule(["levelOne", "levelTwo"], state, {
           getters,
           mutations,
           actions,
@@ -159,7 +240,7 @@ describe("Store", () => {
     });
     test("works in wrong direction", (done) => {
       expect(() => {
-        defineModule(["levelOne", "levelTwo"], state(), {
+        defineModule(["levelOne", "levelTwo"], state, {
           getters,
           mutations,
           actions,
@@ -181,13 +262,13 @@ describe("Store", () => {
     });
     test("works with dynamic module", (done) => {
       expect(() => {
-        defineModule("levelOne", state(), {
+        defineModule("levelOne", state, {
           getters,
           mutations,
           actions,
         });
 
-        defineDynamicModule(["levelOne", "levelTwo"], state(), {
+        defineDynamicModule(["levelOne", "levelTwo"], state, {
           getters,
           mutations,
           actions,
