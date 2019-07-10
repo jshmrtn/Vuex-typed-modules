@@ -77,7 +77,7 @@ class RegisterDynamicModule {
   }
 }
 
-function defineDynamicModule<
+export function defineDynamicModule<
   S,
   M extends { [x: string]: (state, payload?) => void },
   A extends { [x: string]: (context, payload?) => any },
@@ -96,7 +96,7 @@ function defineDynamicModule<
   resetState(): void;
   updateState(params: Partial<S>): void;
 };
-function defineDynamicModule<
+export function defineDynamicModule<
   S,
   M extends { [x: string]: (state, payload?) => void },
   A extends { [x: string]: (context, payload?) => any }
@@ -113,7 +113,7 @@ function defineDynamicModule<
   resetState(): void;
   updateState(params: Partial<S>): void;
 };
-function defineDynamicModule<
+export function defineDynamicModule<
   S,
   M extends { [x: string]: (state, payload?) => void },
   G extends { [x: string]: (state) => any }
@@ -130,7 +130,7 @@ function defineDynamicModule<
   resetState(): void;
   updateState(params: Partial<S>): void;
 };
-function defineDynamicModule<
+export function defineDynamicModule<
   S,
   A extends { [x: string]: (context, payload?) => any },
   G extends { [x: string]: (state) => any }
@@ -147,7 +147,7 @@ function defineDynamicModule<
   resetState(): void;
   updateState(params: Partial<S>): void;
 };
-function defineDynamicModule<
+export function defineDynamicModule<
   S,
   M extends { [x: string]: (state, payload?) => void }
 >(
@@ -162,7 +162,7 @@ function defineDynamicModule<
   resetState(): void;
   updateState(params: Partial<S>): void;
 };
-function defineDynamicModule<
+export function defineDynamicModule<
   S,
   A extends { [x: string]: (context, payload?) => any }
 >(
@@ -177,11 +177,9 @@ function defineDynamicModule<
   resetState(): void;
   updateState(params: Partial<S>): void;
 };
-function defineDynamicModule(name, state, vuexModule) {
+export function defineDynamicModule(name, state, vuexModule) {
   enableHotReload(name, state, vuexModule, true);
   const path = Array.isArray(name) ? name : [name];
   name = path.join('/');
   return new RegisterDynamicModule(path, name, state, vuexModule) as any;
 }
-
-export { defineDynamicModule };

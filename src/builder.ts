@@ -15,7 +15,7 @@ Vue.use(Vuex);
 let storeBuilder: Store<any> = null;
 let storedModules: Array<{path: string[], module: any}> = [];
 
-function getStoredModule(path: ReadonlyArray<string>) {
+export function getStoredModule(path: ReadonlyArray<string>) {
   const stored = storedModules.find((stored) => path.join('/') === stored.path.join('/'));
   if (!stored) { return null; }
   return stored.module;
@@ -49,7 +49,7 @@ function createModuleTriggers(moduleName: string) {
   };
 }
 
-function stateBuilder<S>(state: S, name: string) {
+export function stateBuilder<S>(state: S, name: string) {
   const b = createModuleTriggers(name);
 
   const registerMutations = <T extends IMutationsPayload>(
@@ -100,7 +100,7 @@ function stateBuilder<S>(state: S, name: string) {
   };
 }
 
-function defineModule<
+export function defineModule<
   S,
   M extends IMutationsPayload,
   A extends IActionsPayload,
@@ -117,7 +117,7 @@ function defineModule<
   resetState(): void;
   updateState(params: Partial<S>): void;
 };
-function defineModule<S, M extends IMutationsPayload, A extends IActionsPayload>(
+export function defineModule<S, M extends IMutationsPayload, A extends IActionsPayload>(
   name: string | string[],
   state: S,
   { actions, mutations }: { actions: A; mutations: M }
@@ -128,7 +128,7 @@ function defineModule<S, M extends IMutationsPayload, A extends IActionsPayload>
   resetState(): void;
   updateState(params: Partial<S>): void;
 };
-function defineModule<S, M extends IMutationsPayload, G extends IGettersPayload>(
+export function defineModule<S, M extends IMutationsPayload, G extends IGettersPayload>(
   name: string| string[],
   state: S,
   { mutations, getters }: { mutations: M; getters: G }
@@ -139,7 +139,7 @@ function defineModule<S, M extends IMutationsPayload, G extends IGettersPayload>
   resetState(): void;
   updateState(params: Partial<S>): void;
 };
-function defineModule<S, A extends IActionsPayload, G extends IGettersPayload>(
+export function defineModule<S, A extends IActionsPayload, G extends IGettersPayload>(
   name: string| string[],
   state: S,
   { actions, getters }: { actions: A; getters: G }
@@ -150,7 +150,7 @@ function defineModule<S, A extends IActionsPayload, G extends IGettersPayload>(
   resetState(): void;
   updateState(params: Partial<S>): void;
 };
-function defineModule<S, M extends IMutationsPayload>(
+export function defineModule<S, M extends IMutationsPayload>(
   name: string| string[],
   state: S,
   { mutations }: { mutations: M }
@@ -160,7 +160,7 @@ function defineModule<S, M extends IMutationsPayload>(
   resetState(): void;
   updateState(params: Partial<S>): void;
 };
-function defineModule<S, A extends IActionsPayload>(
+export function defineModule<S, A extends IActionsPayload>(
   name: string | string[],
   state: S,
   { actions }: { actions: A }
@@ -170,7 +170,7 @@ function defineModule<S, A extends IActionsPayload>(
   resetState(): void;
   updateState(params: Partial<S>): void;
 };
-function defineModule(name, state, vuexModule) {
+export function defineModule(name, state, vuexModule) {
   const path = Array.isArray(name) ? name : [name];
   name = path.join('/');
 
@@ -214,7 +214,7 @@ function defineModule(name, state, vuexModule) {
   } as any;
 }
 
-function storeModule(path, state, vuexModule) {
+export function storeModule(path, state, vuexModule) {
   storedModules.push({
     path,
     module: {
@@ -226,7 +226,7 @@ function storeModule(path, state, vuexModule) {
   });
 }
 
-function prepareModules() {
+export function prepareModules() {
   return storedModules
     .sort((a, b) => a.path.length - b.path.length)
     .reduce((accModules, {path, module}) => {
@@ -242,7 +242,7 @@ function prepareModules() {
     }, {modules: {}}).modules;
 }
 
-function createStore({ strict = false, ...options }: StoreOptions<any>) {
+export function createStore({ strict = false, ...options }: StoreOptions<any>) {
   storeBuilder = new Vuex.Store({
     strict,
     ...options,
@@ -267,17 +267,8 @@ function createStore({ strict = false, ...options }: StoreOptions<any>) {
   return storeBuilder;
 }
 
-function resetStoredModules() {
+export function resetStoredModules() {
   storedModules = [];
 }
 
-export {
-  storeBuilder,
-  createStore,
-  stateBuilder,
-  defineModule,
-  prepareModules,
-  getStoredModule,
-  storeModule,
-  resetStoredModules,
-};
+export {storeBuilder};

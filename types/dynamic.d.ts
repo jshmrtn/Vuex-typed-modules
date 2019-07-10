@@ -1,5 +1,5 @@
 import { ReturnedGetters, ReturnedActions, ReturnedMutations } from "./types";
-declare function defineDynamicModule<S, M extends {
+export declare function defineDynamicModule<S, M extends {
     [x: string]: (state: any, payload?: any) => void;
 }, A extends {
     [x: string]: (context: any, payload?: any) => any;
@@ -19,7 +19,7 @@ declare function defineDynamicModule<S, M extends {
     resetState(): void;
     updateState(params: Partial<S>): void;
 };
-declare function defineDynamicModule<S, M extends {
+export declare function defineDynamicModule<S, M extends {
     [x: string]: (state: any, payload?: any) => void;
 }, A extends {
     [x: string]: (context: any, payload?: any) => any;
@@ -35,7 +35,7 @@ declare function defineDynamicModule<S, M extends {
     resetState(): void;
     updateState(params: Partial<S>): void;
 };
-declare function defineDynamicModule<S, M extends {
+export declare function defineDynamicModule<S, M extends {
     [x: string]: (state: any, payload?: any) => void;
 }, G extends {
     [x: string]: (state: any) => any;
@@ -51,7 +51,7 @@ declare function defineDynamicModule<S, M extends {
     resetState(): void;
     updateState(params: Partial<S>): void;
 };
-declare function defineDynamicModule<S, A extends {
+export declare function defineDynamicModule<S, A extends {
     [x: string]: (context: any, payload?: any) => any;
 }, G extends {
     [x: string]: (state: any) => any;
@@ -67,7 +67,7 @@ declare function defineDynamicModule<S, A extends {
     resetState(): void;
     updateState(params: Partial<S>): void;
 };
-declare function defineDynamicModule<S, M extends {
+export declare function defineDynamicModule<S, M extends {
     [x: string]: (state: any, payload?: any) => void;
 }>(name: string | string[], state: S, { mutations }: {
     mutations: M;
@@ -79,7 +79,7 @@ declare function defineDynamicModule<S, M extends {
     resetState(): void;
     updateState(params: Partial<S>): void;
 };
-declare function defineDynamicModule<S, A extends {
+export declare function defineDynamicModule<S, A extends {
     [x: string]: (context: any, payload?: any) => any;
 }>(name: string | string[], state: S, { actions }: {
     actions: A;
@@ -91,4 +91,3 @@ declare function defineDynamicModule<S, A extends {
     resetState(): void;
     updateState(params: Partial<S>): void;
 };
-export { defineDynamicModule };
