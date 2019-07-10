@@ -31,10 +31,12 @@ var builder_1 = require("./builder");
 var hotModule_1 = require("./hotModule");
 function stateExists(state, _a) {
     var _b = __read(_a), address = _b[0], path = _b.slice(1);
-    if (!address)
+    if (!address) {
         return true;
-    if (!state[address])
+    }
+    if (!state[address]) {
         return false;
+    }
     return stateExists(state[address], path);
 }
 var RegisterDynamicModule = (function () {
@@ -58,8 +60,9 @@ var RegisterDynamicModule = (function () {
         });
     }
     RegisterDynamicModule.prototype.register = function () {
-        if (this.registered)
+        if (this.registered) {
             return;
+        }
         builder_1.storeModule(this.path, this.initialState, __assign({ namespaced: true, state: this.initialState }, this.Vuexmodule));
         if (!stateExists(builder_1.storeBuilder.state, this.path)) {
             builder_1.storeBuilder.registerModule(this.path, __assign({ namespaced: true, state: this.initialState }, this.Vuexmodule));

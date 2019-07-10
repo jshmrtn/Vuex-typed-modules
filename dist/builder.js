@@ -31,14 +31,13 @@ var hotModule_1 = require("./hotModule");
 vue_1.default.use(vuex_1.default);
 var storeBuilder = null;
 exports.storeBuilder = storeBuilder;
-var storedModules = {};
-exports.storedModules = storedModules;
+var storedModules = [];
 function getStoredModule(path) {
-    return path.reduce(function (acc, name) {
-        if (!acc)
-            return acc;
-        return acc.modules[name];
-    }, { modules: storedModules });
+    var stored = storedModules.find(function (stored) { return path.join('/') === stored.path.join('/'); });
+    if (!stored) {
+        return null;
+    }
+    return stored.module;
 }
 exports.getStoredModule = getStoredModule;
 function createModuleTriggers(moduleName) {
@@ -146,16 +145,29 @@ function defineModule(name, state, vuexModule) {
 }
 exports.defineModule = defineModule;
 function storeModule(path, state, vuexModule) {
-    var parentModule = getStoredModule(path.slice(0, -1));
-    if (!parentModule) {
-        throw "Parent Module of " + path.join('/') + " not found";
-    }
-    parentModule.modules[path.slice(-1)[0]] = __assign({ namespaced: true, modules: {}, state: state }, vuexModule);
+    storedModules.push({
+        path: path,
+        module: __assign({ namespaced: true, modules: {}, state: state }, vuexModule)
+    });
 }
 exports.storeModule = storeModule;
+function prepareModules() {
+    return storedModules
+        .sort(function (a, b) { return a.path.length - b.path.length; })
+        .reduce(function (accModules, _a) {
+        var path = _a.path, module = _a.module;
+        var parentModule = path.length === 1 ? accModules : getStoredModule(path.slice(0, -1));
+        if (!parentModule) {
+            throw new Error("Parent Module of " + path.join('/') + " not found");
+        }
+        parentModule.modules[path.slice(-1)[0]] = module;
+        return accModules;
+    }, { modules: {} }).modules;
+}
+exports.prepareModules = prepareModules;
 function createStore(_a) {
     var _b = _a.strict, strict = _b === void 0 ? false : _b, options = __rest(_a, ["strict"]);
-    exports.storeBuilder = storeBuilder = new vuex_1.default.Store(__assign({ strict: strict }, options, { modules: storedModules }));
+    exports.storeBuilder = storeBuilder = new vuex_1.default.Store(__assign({ strict: strict }, options, { modules: prepareModules() }));
     storeBuilder.subscribeAction({
         before: function (action, state) {
             var moduleName = action.type.split("/")[0];
@@ -169,3 +181,7 @@ function createStore(_a) {
     return storeBuilder;
 }
 exports.createStore = createStore;
+function resetStoredModules() {
+    storedModules = [];
+}
+exports.resetStoredModules = resetStoredModules;

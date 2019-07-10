@@ -1,6 +1,5 @@
 import { ReturnedGetters, ReturnedActions, ReturnedMutations } from "./types";
 import { storeBuilder, stateBuilder, storeModule } from "./builder";
-import { storedModules } from "./builder";
 import { enableHotReload, disableHotReload } from "./hotModule";
 
 function stateExists(state: object, [address, ...path]: string[]) {

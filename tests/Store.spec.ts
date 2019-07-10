@@ -1,13 +1,18 @@
 import { createLocalVue } from '@vue/test-utils';
 
-import { createStore, defineModule } from "../src";
-import { storedModules } from "../src/builder";
+import { createStore, defineModule, defineDynamicModule } from "../src";
+import { resetStoredModules } from "../src/builder";
 
 import Vuex from 'vuex';
 
 import { state, actions, getters, mutations } from "./src/layout/module";
 
 import _cloneDeep from "lodash/cloneDeep";
+
+afterEach((done) => {
+  resetStoredModules();
+  done();
+});
 
 describe("Store", () => {
   describe('Base Capabilities', () => {
@@ -32,7 +37,6 @@ describe("Store", () => {
 
     afterEach((done) => {
       layout.resetState();
-      delete storedModules.layout;
       done();
     });
 
@@ -96,8 +100,6 @@ describe("Store", () => {
       expect(store.state.levelOne).toBeDefined();
       expect(store.state.levelOne.levelTwo).toBeDefined();
 
-      delete storedModules.levelOne;
-
       done();
     });
     test("gives meaningful error on missing parent", (done) => {
@@ -107,7 +109,56 @@ describe("Store", () => {
           mutations,
           actions,
         });
+
+        createStore({
+          strict: true,
+          state: {},
+        });
       }).toThrow();
+
+      done();
+    });
+    test("works in wrong direction", (done) => {
+      expect(() => {
+        defineModule(["levelOne", "levelTwo"], _cloneDeep(state), {
+          getters,
+          mutations,
+          actions,
+        });
+
+        defineModule("levelOne", _cloneDeep(state), {
+          getters,
+          mutations,
+          actions,
+        });
+
+        createStore({
+          strict: true,
+          state: {},
+        });
+      }).not.toThrow();
+
+      done();
+    });
+    test("works with dynamic module", (done) => {
+      expect(() => {
+        defineModule("levelOne", _cloneDeep(state), {
+          getters,
+          mutations,
+          actions,
+        });
+
+        defineDynamicModule(["levelOne", "levelTwo"], _cloneDeep(state), {
+          getters,
+          mutations,
+          actions,
+        });
+
+        createStore({
+          strict: true,
+          state: {},
+        });
+      }).not.toThrow();
 
       done();
     });

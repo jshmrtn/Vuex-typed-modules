@@ -21,7 +21,7 @@ function enableHotReload(path, state, vuexModule, dynamic) {
         else if (appliedModule) {
             Object.assign(appliedModule, __assign({ namespaced: true, state: state }, vuexModule));
             builder_1.storeBuilder.hotUpdate({
-                modules: __assign({}, builder_1.storedModules),
+                modules: __assign({}, builder_1.prepareModules()),
             });
             console.log("%c vuex-typed-modules %c " + (dynamic ? 'Dynamic' : '') + "Module '" + name + "' hot reloaded %c", 'background:#35495e ; padding: 1px; border-radius: 3px 0 0 3px;  color: #fff', 'background:#d64a17 ; padding: 1px; border-radius: 0 3px 3px 0;  color: #fff', 'background:transparent');
         }

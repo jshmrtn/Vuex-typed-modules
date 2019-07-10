@@ -1,4 +1,4 @@
-import { storeBuilder, storedModules, getStoredModule, storeModule } from './builder';
+import { storeBuilder, prepareModules, getStoredModule, storeModule } from './builder';
 
 export function enableHotReload(path, state, vuexModule, dynamic?: boolean) {
   if (module.hot) {
@@ -14,7 +14,7 @@ export function enableHotReload(path, state, vuexModule, dynamic?: boolean) {
 
       storeBuilder.hotUpdate({
         modules: {
-          ...storedModules,
+          ...prepareModules(),
         },
       });
       console.log(

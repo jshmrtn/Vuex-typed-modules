@@ -13,13 +13,12 @@ import { enableHotReload } from "./hotModule";
 Vue.use(Vuex);
 
 let storeBuilder: Store<any> = null;
-const storedModules: any = {};
+let storedModules: Array<{path: string[], module: any}> = [];
 
 function getStoredModule(path: ReadonlyArray<string>) {
-  return path.reduce((acc, name) => {
-    if (!acc) { return acc; }
-    return acc.modules[name];
-  }, {modules: storedModules});
+  const stored = storedModules.find((stored) => path.join('/') === stored.path.join('/'));
+  if (!stored) { return null; }
+  return stored.module;
 }
 
 function createModuleTriggers(moduleName: string) {
@@ -216,25 +215,38 @@ function defineModule(name, state, vuexModule) {
 }
 
 function storeModule(path, state, vuexModule) {
-  const parentModule = getStoredModule(path.slice(0, -1));
+  storedModules.push({
+    path,
+    module: {
+      namespaced: true,
+      modules: {},
+      state,
+      ...vuexModule,
+    }
+  });
+}
 
-  if (!parentModule) {
-    throw new Error(`Parent Module of ${path.join('/')} not found`);
-  }
+function prepareModules() {
+  return storedModules
+    .sort((a, b) => a.path.length - b.path.length)
+    .reduce((accModules, {path, module}) => {
+      const parentModule = path.length === 1 ? accModules : getStoredModule(path.slice(0, -1));
 
-  parentModule.modules[path.slice(-1)[0]] = {
-    namespaced: true,
-    modules: {},
-    state,
-    ...vuexModule,
-  };
+      if (!parentModule) {
+        throw new Error(`Parent Module of ${path.join('/')} not found`);
+      }
+
+      parentModule.modules[path.slice(-1)[0]] = module;
+
+      return accModules;
+    }, {modules: {}}).modules;
 }
 
 function createStore({ strict = false, ...options }: StoreOptions<any>) {
   storeBuilder = new Vuex.Store({
     strict,
     ...options,
-    modules: storedModules
+    modules: prepareModules(),
   });
   storeBuilder.subscribeAction({
     before: (action, state) => {
@@ -255,4 +267,17 @@ function createStore({ strict = false, ...options }: StoreOptions<any>) {
   return storeBuilder;
 }
 
-export { storeBuilder, createStore, stateBuilder, defineModule, storedModules, getStoredModule, storeModule };
+function resetStoredModules() {
+  storedModules = [];
+}
+
+export {
+  storeBuilder,
+  createStore,
+  stateBuilder,
+  defineModule,
+  prepareModules,
+  getStoredModule,
+  storeModule,
+  resetStoredModules,
+};

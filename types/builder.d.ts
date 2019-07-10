@@ -1,7 +1,6 @@
 import { Store, StoreOptions } from "vuex";
 import { ReturnedMutations, ReturnedActions, ReturnedGetters, IMutationsPayload, IActionsPayload, IGettersPayload } from "./types";
 declare let storeBuilder: Store<any>;
-declare const storedModules: any;
 declare function getStoredModule(path: ReadonlyArray<string>): any;
 declare function stateBuilder<S>(state: S, name: string): {
     registerMutations: <T extends IMutationsPayload>(mutations: T) => ReturnedMutations<T>;
@@ -68,5 +67,7 @@ declare function defineModule<S, A extends IActionsPayload>(name: string | strin
     updateState(params: Partial<S>): void;
 };
 declare function storeModule(path: any, state: any, vuexModule: any): void;
+declare function prepareModules(): {};
 declare function createStore({ strict, ...options }: StoreOptions<any>): Store<any>;
-export { storeBuilder, createStore, stateBuilder, defineModule, storedModules, getStoredModule, storeModule };
+declare function resetStoredModules(): void;
+export { storeBuilder, createStore, stateBuilder, defineModule, prepareModules, getStoredModule, storeModule, resetStoredModules, };
