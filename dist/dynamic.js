@@ -85,7 +85,7 @@ var RegisterDynamicModule = (function () {
         }
     };
     RegisterDynamicModule.prototype.unregister = function () {
-        builder_1.storeBuilder.unregisterModule(this.name);
+        builder_1.storeBuilder.unregisterModule(this.path);
         this.registered = false;
         if (module.hot) {
             hotModule_1.disableHotReload(this.path);

@@ -75,7 +75,7 @@ class RegisterDynamicModule {
     }
   }
   public unregister() {
-    storeBuilder.unregisterModule(this.name);
+    storeBuilder.unregisterModule(this.path);
     this.registered = false;
 
     if (module.hot) {
