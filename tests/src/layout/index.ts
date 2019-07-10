@@ -1,8 +1,16 @@
 import { defineModule } from "../../../src";
 
-import { state, actions, getters, mutations } from "./module";
+import { actions, getters, mutations } from "./module";
 
-export const layout = defineModule("layout", state, {
+export function state(): LayoutModule.ModuleState {
+  return {
+    backgroundColor: "red",
+    stickyHeader: false,
+    footerState: "HIDE",
+  };
+}
+
+export const layout = defineModule("layout", state(), {
   getters,
   mutations,
   actions,

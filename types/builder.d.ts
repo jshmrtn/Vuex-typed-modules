@@ -2,6 +2,7 @@ import { Store, StoreOptions } from "vuex";
 import { ReturnedMutations, ReturnedActions, ReturnedGetters, IMutationsPayload, IActionsPayload, IGettersPayload } from "./types";
 declare let storeBuilder: Store<any>;
 export declare function getStoredModule(path: ReadonlyArray<string>): any;
+export declare function deleteStoredModule(path: ReadonlyArray<string>): void;
 export declare function stateBuilder<S>(state: S, name: string): {
     registerMutations: <T extends IMutationsPayload>(mutations: T) => ReturnedMutations<T>;
     registerActions: <T extends IActionsPayload>(actions: T) => ReturnedActions<T>;
@@ -66,6 +67,7 @@ export declare function defineModule<S, A extends IActionsPayload>(name: string 
     resetState(): void;
     updateState(params: Partial<S>): void;
 };
+export declare function addNativeMutations(vuexModule: any, initialState: any): any;
 export declare function storeModule(path: any, state: any, vuexModule: any): void;
 export declare function prepareModules(): {};
 export declare function createStore({ strict, ...options }: StoreOptions<any>): Store<any>;

@@ -48,7 +48,8 @@
     "clean": "rimraf dist && rimraf types",
     "compile": "tsc --pretty",
     "lint": "tslint -c tslint.json 'src/**/*.ts'",
-    "test": "JEST_ENV=test jest --clear-cache && jest",
+    "test": "JEST_ENV=test jest --clear-cache && jest --runInBand --no-coverage",
+    "test:watch": "npm run test -- --watch",
     "build": "npm run clean && npm run lint && npm run compile"
   },
   "devDependencies": {

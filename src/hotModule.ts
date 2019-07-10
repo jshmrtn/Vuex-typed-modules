@@ -1,4 +1,4 @@
-import { storeBuilder, prepareModules, getStoredModule, storeModule } from './builder';
+import { storeBuilder, prepareModules, getStoredModule, storeModule, deleteStoredModule } from './builder';
 
 export function enableHotReload(path, state, vuexModule, dynamic?: boolean) {
   if (module.hot) {
@@ -28,6 +28,10 @@ export function enableHotReload(path, state, vuexModule, dynamic?: boolean) {
 }
 
 export function disableHotReload(path) {
-  const parent = getStoredModule(path.slice(0, -1));
-  delete parent.modules[path.slice(-1)[0]];
+  deleteStoredModule(path);
+  storeBuilder.hotUpdate({
+    modules: {
+      ...prepareModules(),
+    },
+  });
 }

@@ -40,6 +40,10 @@ function getStoredModule(path) {
     return stored.module;
 }
 exports.getStoredModule = getStoredModule;
+function deleteStoredModule(path) {
+    storedModules = storedModules.filter(function (stored) { return stored.path.join('/') !== path.join('/'); });
+}
+exports.deleteStoredModule = deleteStoredModule;
 function createModuleTriggers(moduleName) {
     function commit(name) {
         return function (payload) { return storeBuilder.commit(moduleName + "/" + name, payload); };
@@ -105,29 +109,17 @@ function stateBuilder(state, name) {
     };
 }
 exports.stateBuilder = stateBuilder;
-function defineModule(name, state, vuexModule) {
+function defineModule(name, stateInstance, vuexModule) {
     var path = Array.isArray(name) ? name : [name];
     name = path.join('/');
-    if (!vuexModule.mutations) {
-        vuexModule.mutations = {};
-    }
-    vuexModule.mutations.resetState = function (moduleState) {
-        Object.keys(state).map(function (key) {
-            vue_1.default.set(moduleState, key, state[key]);
-        });
-    };
-    vuexModule.mutations.updateState = function (moduleState, params) {
-        Object.keys(params).map(function (key) {
-            vue_1.default.set(moduleState, key, params[key]);
-        });
-    };
+    vuexModule = addNativeMutations(vuexModule, stateInstance);
     if (module.hot) {
-        hotModule_1.enableHotReload(path, state, vuexModule);
+        hotModule_1.enableHotReload(path, stateInstance, vuexModule);
     }
     else {
-        storeModule(path, state, vuexModule);
+        storeModule(path, stateInstance, vuexModule);
     }
-    var _a = stateBuilder(state, name), registerGetters = _a.registerGetters, registerMutations = _a.registerMutations, registerActions = _a.registerActions, newState = _a.state;
+    var _a = stateBuilder(stateInstance, name), registerGetters = _a.registerGetters, registerMutations = _a.registerMutations, registerActions = _a.registerActions, newState = _a.state;
     return {
         mutations: registerMutations(vuexModule.mutations),
         actions: registerActions(vuexModule.actions),
@@ -144,6 +136,23 @@ function defineModule(name, state, vuexModule) {
     };
 }
 exports.defineModule = defineModule;
+function addNativeMutations(vuexModule, initialState) {
+    if (!vuexModule.mutations) {
+        vuexModule.mutations = {};
+    }
+    vuexModule.mutations.resetState = function (moduleState) {
+        Object.keys(initialState).map(function (key) {
+            vue_1.default.set(moduleState, key, initialState[key]);
+        });
+    };
+    vuexModule.mutations.updateState = function (moduleState, params) {
+        Object.keys(params).map(function (key) {
+            vue_1.default.set(moduleState, key, params[key]);
+        });
+    };
+    return vuexModule;
+}
+exports.addNativeMutations = addNativeMutations;
 function storeModule(path, state, vuexModule) {
     storedModules.push({
         path: path,
@@ -170,8 +179,8 @@ function createStore(_a) {
     exports.storeBuilder = storeBuilder = new vuex_1.default.Store(__assign({ strict: strict }, options, { modules: prepareModules() }));
     storeBuilder.subscribeAction({
         before: function (action, state) {
-            var moduleName = action.type.split("/")[0];
-            var type = action.type.split("/")[1];
+            var moduleName = action.type.split("/").slice(0, -1).join('/');
+            var type = action.type.split("/").slice(-1)[0];
             console.groupCollapsed("%c Vuex Action %c " + moduleName + " %c " + type + " %c", "background: #451382 ; padding: 1px; border-radius: 3px 0 0 3px;  color: #fff", "background:#fff;padding: 1px;color: #451382", "background:#2788d2;padding: 1px;border-radius: 0 3px 3px 0;color: #fff", "background:transparent");
             console.log("PAYLOAD", action.payload);
             console.log("STATE", state);
@@ -183,5 +192,6 @@ function createStore(_a) {
 exports.createStore = createStore;
 function resetStoredModules() {
     storedModules = [];
+    exports.storeBuilder = storeBuilder = null;
 }
 exports.resetStoredModules = resetStoredModules;

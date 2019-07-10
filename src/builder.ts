@@ -21,6 +21,10 @@ export function getStoredModule(path: ReadonlyArray<string>) {
   return stored.module;
 }
 
+export function deleteStoredModule(path: ReadonlyArray<string>) {
+  storedModules = storedModules.filter((stored) => stored.path.join('/') !== path.join('/'));
+}
+
 function createModuleTriggers(moduleName: string) {
   function commit(name) {
     return payload => storeBuilder.commit(moduleName + "/" + name, payload);
@@ -170,25 +174,16 @@ export function defineModule<S, A extends IActionsPayload>(
   resetState(): void;
   updateState(params: Partial<S>): void;
 };
-export function defineModule(name, state, vuexModule) {
+export function defineModule(name, stateInstance, vuexModule) {
   const path = Array.isArray(name) ? name : [name];
   name = path.join('/');
 
-  if (!vuexModule.mutations) { vuexModule.mutations = {}; }
-  vuexModule.mutations.resetState = moduleState => {
-    Object.keys(state).map(key => {
-      Vue.set(moduleState, key, state[key]);
-    });
-  };
-  vuexModule.mutations.updateState = (moduleState, params) => {
-    Object.keys(params).map(key => {
-      Vue.set(moduleState, key, params[key]);
-    });
-  };
+  vuexModule = addNativeMutations(vuexModule, stateInstance);
+
   if (module.hot) {
-    enableHotReload(path, state, vuexModule);
+    enableHotReload(path, stateInstance, vuexModule);
   } else {
-    storeModule(path, state, vuexModule);
+    storeModule(path, stateInstance, vuexModule);
   }
 
   const {
@@ -196,7 +191,7 @@ export function defineModule(name, state, vuexModule) {
     registerMutations,
     registerActions,
     state: newState
-  } = stateBuilder(state, name);
+  } = stateBuilder(stateInstance, name);
 
   return {
     mutations: registerMutations(vuexModule.mutations),
@@ -212,6 +207,23 @@ export function defineModule(name, state, vuexModule) {
       return newState();
     }
   } as any;
+}
+
+export function addNativeMutations(vuexModule, initialState) {
+  if (!vuexModule.mutations) { vuexModule.mutations = {}; }
+
+  vuexModule.mutations.resetState = moduleState => {
+    Object.keys(initialState).map(key => {
+      Vue.set(moduleState, key, initialState[key]);
+    });
+  };
+  vuexModule.mutations.updateState = (moduleState, params) => {
+    Object.keys(params).map(key => {
+      Vue.set(moduleState, key, params[key]);
+    });
+  };
+
+  return vuexModule;
 }
 
 export function storeModule(path, state, vuexModule) {
@@ -250,8 +262,8 @@ export function createStore({ strict = false, ...options }: StoreOptions<any>) {
   });
   storeBuilder.subscribeAction({
     before: (action, state) => {
-      const moduleName = action.type.split("/")[0];
-      const type = action.type.split("/")[1];
+      const moduleName = action.type.split("/").slice(0, -1).join('/');
+      const type = action.type.split("/").slice(-1)[0];
       console.groupCollapsed(
         `%c Vuex Action %c ${moduleName} %c ${type} %c`,
         "background: #451382 ; padding: 1px; border-radius: 3px 0 0 3px;  color: #fff",
@@ -269,6 +281,7 @@ export function createStore({ strict = false, ...options }: StoreOptions<any>) {
 
 export function resetStoredModules() {
   storedModules = [];
+  storeBuilder = null;
 }
 
-export {storeBuilder};
+export { storeBuilder };

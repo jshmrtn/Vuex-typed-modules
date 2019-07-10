@@ -29,7 +29,9 @@ function enableHotReload(path, state, vuexModule, dynamic) {
 }
 exports.enableHotReload = enableHotReload;
 function disableHotReload(path) {
-    var parent = builder_1.getStoredModule(path.slice(0, -1));
-    delete parent.modules[path.slice(-1)[0]];
+    builder_1.deleteStoredModule(path);
+    builder_1.storeBuilder.hotUpdate({
+        modules: __assign({}, builder_1.prepareModules()),
+    });
 }
 exports.disableHotReload = disableHotReload;

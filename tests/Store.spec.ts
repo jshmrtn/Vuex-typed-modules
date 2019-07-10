@@ -5,90 +5,129 @@ import { resetStoredModules } from "../src/builder";
 
 import Vuex from 'vuex';
 
-import { state, actions, getters, mutations } from "./src/layout/module";
+import { actions, getters, mutations } from "./src/layout/module";
+import { state } from "./src/layout";
 
 import _cloneDeep from "lodash/cloneDeep";
 
-afterEach((done) => {
+beforeEach((done) => {
   resetStoredModules();
   done();
 });
 
 describe("Store", () => {
-  describe('Base Capabilities', () => {
-    let layout;
-    let localVue;
-    let store;
 
-    beforeEach((done) => {
-      layout = defineModule("layout", _cloneDeep(state), {
-        getters,
-        mutations,
-        actions,
+  Object.entries({ static: defineModule, dynamic: defineDynamicModule}).forEach(([name, constructor]) => {
+
+    describe(`${name}: Base Capabilities`, () => {
+      let layout;
+      let localVue;
+      let store;
+
+      beforeEach((done) => {
+        layout = constructor("layout", state(), {
+          getters,
+          mutations,
+          actions,
+        });
+
+        localVue = createLocalVue();
+        localVue.use(Vuex);
+        store = createStore({
+          strict: true,
+          state: {},
+        });
+
+        if (constructor === defineDynamicModule) {
+          layout.register();
+        }
+
+        done();
       });
-      localVue = createLocalVue();
-      localVue.use(Vuex);
-      store = createStore({
-        strict: true,
-        state: {},
+
+      afterEach((done) => {
+        layout.resetState();
+
+        if (constructor === defineDynamicModule) {
+          layout.unregister();
+        }
+
+        done();
       });
-      done();
+
+      test('changes "backgroundColor" value when "setBackgroundColor" is commited', () => {
+
+        expect(layout.state.backgroundColor).toBe("red");
+        expect(store.state.layout.backgroundColor).toBe("red");
+        expect(layout.getters.backgroundColor).toBe("red");
+
+        layout.mutations.setBackgroundColor("blue");
+
+        expect(layout.state.backgroundColor).toBe("blue");
+        expect(store.state.layout.backgroundColor).toBe("blue");
+        expect(layout.getters.backgroundColor).toBe("blue");
+
+      });
+
+      test('changes "stickyHeader" value when "toggleStickyHeader" is commited', () => {
+
+        expect(layout.state.stickyHeader).toBeFalsy();
+        expect(store.state.layout.stickyHeader).toBeFalsy();
+
+        layout.mutations.toggleStickyHeader();
+
+        expect(layout.state.stickyHeader).toBeTruthy();
+        expect(store.state.layout.stickyHeader).toBeTruthy();
+
+      });
+
+      test('changes "backgroundColor" value to "red" when "loadBackgroundColor" is dispatched', async (done) => {
+
+        layout.mutations.setBackgroundColor("blue");
+
+        expect(layout.state.backgroundColor).toBe("blue");
+        expect(store.state.layout.backgroundColor).toBe("blue");
+
+        await layout.actions.loadBackgroundColor();
+
+        expect(layout.state.backgroundColor).toBe("red");
+        expect(store.state.layout.backgroundColor).toBe("red");
+
+        done();
+
+      });
+
+      test('reactivity', async (done) => {
+        const spy = jest.fn();
+
+        store.watch(
+          (_state, getters) => getters['layout/backgroundColor'],
+          spy
+        );
+
+        layout.mutations.setBackgroundColor("blue");
+
+        await new Promise((resolve) => {
+          setTimeout(resolve, 1000);
+        });
+
+        expect(spy).toHaveBeenCalledWith("blue", "red");
+
+        done();
+      });
+
     });
 
-    afterEach((done) => {
-      layout.resetState();
-      done();
-    });
-
-    test('changes "backgroundColor" value when "setBackgroundColor" is commited', () => {
-
-      expect(layout.state.backgroundColor).toBe("red");
-      expect(store.state.layout.backgroundColor).toBe("red");
-
-      layout.mutations.setBackgroundColor("blue");
-
-      expect(layout.state.backgroundColor).toBe("blue");
-      expect(store.state.layout.backgroundColor).toBe("blue");
-
-    });
-
-    test('changes "stickyHeader" value when "toggleStickyHeader" is commited', () => {
-
-      expect(layout.state.stickyHeader).toBeFalsy();
-      expect(store.state.layout.stickyHeader).toBeFalsy();
-
-      layout.mutations.toggleStickyHeader();
-
-      expect(layout.state.stickyHeader).toBeTruthy();
-      expect(store.state.layout.stickyHeader).toBeTruthy();
-
-    });
-
-    test('changes "backgroundColor" value to "red" when "loadBackgroundColor" is dispatched', async (done) => {
-
-      layout.mutations.setBackgroundColor("blue");
-
-      expect(layout.state.backgroundColor).toBe("blue");
-      expect(store.state.layout.backgroundColor).toBe("blue");
-
-      await layout.actions.loadBackgroundColor();
-
-      expect(layout.state.backgroundColor).toBe("red");
-      expect(store.state.layout.backgroundColor).toBe("red");
-
-      done();
-
-    });
   });
 
   describe('Nested Modules', () => {
     test("correctly nests modules", (done) => {
-      const levelOne = defineModule("levelOne", _cloneDeep(state), {
+      const levelOne = defineModule("levelOne", state(), {
         getters,
         mutations,
         actions,
       });
-      const levelTwo = defineModule(["levelOne", "levelTwo"], _cloneDeep(state), {
+      const levelTwo = defineModule(["levelOne", "levelTwo"], state, {
         getters,
         mutations,
         actions,
@@ -104,7 +143,7 @@ describe("Store", () => {
     });
     test("gives meaningful error on missing parent", (done) => {
       expect(() => {
-        defineModule(["levelOne", "levelTwo"], _cloneDeep(state), {
+        defineModule(["levelOne", "levelTwo"], state(), {
           getters,
           mutations,
           actions,
@@ -120,13 +159,13 @@ describe("Store", () => {
     });
     test("works in wrong direction", (done) => {
       expect(() => {
-        defineModule(["levelOne", "levelTwo"], _cloneDeep(state), {
+        defineModule(["levelOne", "levelTwo"], state(), {
           getters,
           mutations,
           actions,
         });
 
-        defineModule("levelOne", _cloneDeep(state), {
+        defineModule("levelOne", state, {
           getters,
           mutations,
           actions,
@@ -142,13 +181,13 @@ describe("Store", () => {
     });
     test("works with dynamic module", (done) => {
       expect(() => {
-        defineModule("levelOne", _cloneDeep(state), {
+        defineModule("levelOne", state(), {
           getters,
           mutations,
           actions,
         });
 
-        defineDynamicModule(["levelOne", "levelTwo"], _cloneDeep(state), {
+        defineDynamicModule(["levelOne", "levelTwo"], state(), {
           getters,
           mutations,
           actions,
