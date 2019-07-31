@@ -1,6 +1,7 @@
 import { storeBuilder, prepareModules, getStoredModule, storeModule, deleteStoredModule } from './builder';
 
 export function enableHotReload(path, state, vuexModule, dynamic?: boolean) {
+  const name = path.join('/');
   if (module.hot) {
     const appliedModule = getStoredModule(path) as object | null;
     if (!appliedModule && !dynamic) {

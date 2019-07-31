@@ -13,6 +13,7 @@ var __assign = (this && this.__assign) || function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 var builder_1 = require("./builder");
 function enableHotReload(path, state, vuexModule, dynamic) {
+    var name = path.join('/');
     if (module.hot) {
         var appliedModule = builder_1.getStoredModule(path);
         if (!appliedModule && !dynamic) {
